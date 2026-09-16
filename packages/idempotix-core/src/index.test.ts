@@ -1,8 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { IDEMPOTIX_CORE_VERSION } from './index.js';
+import * as idempotixCore from './index.js';
 
-describe('package scaffold', () => {
-  it('exports a placeholder marker', () => {
-    expect(IDEMPOTIX_CORE_VERSION).toBe('0.0.0-milestone-1');
+describe('public API surface', () => {
+  it('exports every documented value', () => {
+    expect(Object.keys(idempotixCore).sort()).toEqual(
+      [
+        'IdempotixError',
+        'FingerprintMismatchError',
+        'ConflictInProgressError',
+        'UnsupportedPayloadValueError',
+        'InvalidTtlError',
+        'InvalidScopePartError',
+        'SystemClock',
+        'generateKey',
+        'parseTtlMs',
+        'buildScope',
+        'fingerprint',
+        'InMemoryIdempotencyStore',
+        'NoopMetrics',
+        'runIdempotent',
+      ].sort(),
+    );
   });
 });

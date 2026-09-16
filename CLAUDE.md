@@ -34,6 +34,10 @@ Correctness under concurrency and retries matters more than convenience.
 
 **Why `tsconfig.base.json` sets `"ignoreDeprecations": "6.0"`:** tsup 8.5.1's DTS-bundling step unconditionally injects `baseUrl: "."` into the compiler options it hands to TypeScript (`tsup/dist/rollup.js`), even though no package here sets `baseUrl` itself. TypeScript 6.0 treats any `baseUrl` as a hard deprecation error (`TS5101`) ahead of its removal in 7.0. This flag silences that specific transitional class of error; it is not silencing anything this repo's own config introduces. Re-check whether it's still needed whenever tsup or typescript is upgraded.
 
+**Why `tsconfig.base.json` sets `"types": ["node"]` explicitly:** tsup's DTS-bundling worker constructs its own isolated TypeScript program and does not reliably auto-discover `@types/node`'s ambient `node:*` module declarations the way a normal `tsc -p` invocation does — without this, `import { randomUUID } from 'node:crypto'`-style imports fail only inside the DTS build step (`TS2591: Cannot find name 'node:crypto'`) while the regular esbuild-based JS/CJS build and `tsc --noEmit` both succeed, which makes the failure easy to miss if you only run typecheck. Re-check whether it's still needed whenever tsup is upgraded.
+
+**Convention: `undefined` means "not set", `null` means "the real value is null".** A jsonb-backed field like `response_body` can legitimately hold the JSON literal `null` (e.g. a 204 response) — that must stay distinguishable from "this record hasn't completed yet". Internal/mutable representations use `undefined` as the not-yet-set sentinel and only ever expose `null` in the public `IdempotencyRecord` shape for the fixed `status: 'processing'` variant (see `packages/idempotix-core/src/store.ts` and `in-memory-store.ts`). Any future adapter mapping a DB `NULL` column has the same distinction to make.
+
 ## Package Layout
 
 npm scope: `@sabeesoft`. All packages live under `packages/`.
@@ -56,8 +60,8 @@ Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete O
 
 ## Milestone Order
 
-1. Monorepo skeleton, tooling, CI, package publishing setup. **(this repo's current state)**
-2. `@sabeesoft/idempotix-core` + ports + in-memory store + unit tests.
+1. Monorepo skeleton, tooling, CI, package publishing setup. **(done)**
+2. `@sabeesoft/idempotix-core` + ports + in-memory store + unit tests. **(this repo's current state)**
 3. Shared contract test suite.
 4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers).
 5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests.
