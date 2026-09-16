@@ -133,12 +133,13 @@ import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 
 const sdk = new NodeSDK({
-  metricReader: new PeriodicExportingMetricReader({ exporter: new OTLPMetricExporter() }),
+  serviceName: 'payments-api',
+  metricReaders: [new PeriodicExportingMetricReader({ exporter: new OTLPMetricExporter() })],
 });
 sdk.start();
 ```
 
-Resource attributes (`service.name`, `service.instance.id`, …) come from your SDK setup; that is what lets a dashboard sum `db.client.connection.count` across services and replicas and compare it with the database's `max_connections`.
+Resource attributes (`service.name`, `service.instance.id`, …) come from your SDK setup; that is what lets a dashboard sum `db.client.connection.count` across services and replicas and compare it with the database's `max_connections`. The full catalogue, a Prometheus setup and dashboard queries are in [`docs/observability.md`](../../docs/observability.md).
 
 ## Known limitations
 

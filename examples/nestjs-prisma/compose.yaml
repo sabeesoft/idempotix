@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_USER: idempotix
+      POSTGRES_PASSWORD: idempotix
+      POSTGRES_DB: idempotix
+    ports:
+      - '5432:5432'

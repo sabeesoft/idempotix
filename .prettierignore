@@ -3,3 +3,4 @@ coverage/
 .turbo/
 pnpm-lock.yaml
 packages/*/src/generated/
+examples/*/src/generated/

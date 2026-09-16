@@ -59,20 +59,9 @@ NestJS packages, `@prisma/client`, `typeorm`, `nestjs-cls`, `@nestjs-cls/transac
 
 Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete OTel SDK or exporter — the consuming app owns SDK/exporter setup, and without one registered, metrics must be automatic no-ops. Metric attributes are limited to low-cardinality values (route template, operation, outcome, pool name); never idempotency keys, request ids, user ids, or raw URLs. Core's `MetricAttributes` type has a single `route` field for exactly this reason.
 
-Canonical metric catalogue (meter `idempotix`, units in seconds):
+The user-facing metric catalogue, SDK bootstrap and dashboard queries live in `docs/observability.md` — keep it the single source of truth and update it whenever an instrument or attribute changes.
 
-| Metric                                                                       | Instrument                  | Attributes                                                                | Emitted by                                                          |
-| ---------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `idempotix.requests`                                                         | counter                     | `http.route`, `idempotix.outcome`                                         | `OtelIdempotencyMetrics` (nestjs)                                   |
-| `idempotix.processing`                                                       | up-down counter             | `http.route`                                                              | same                                                                |
-| `idempotix.handler.duration`                                                 | histogram                   | `http.route`, `idempotix.result`                                          | same                                                                |
-| `idempotix.transaction.duration`                                             | histogram                   | `http.route`, `idempotix.transaction.outcome`, `error.type`               | interceptor around `runInTransaction`                               |
-| `db.client.operation.duration`                                               | histogram                   | `db.system.name`, `db.operation.name`, `db.collection.name`, `error.type` | `instrumentPrisma` `$extends` hook                                  |
-| `db.client.connection.{count,max,pending_requests}`                          | observable up-down counters | `db.client.connection.pool.name` (+ `state` on `count`)                   | `instrumentPrisma` batch callback                                   |
-| `db.client.connection.{wait_time,use_time}`, `db.client.connection.timeouts` | histograms / counter        | pool name                                                                 | `instrumentPrisma` (wrapped `pool.connect`, acquire/release events) |
-| `idempotix.db.pool.errors`                                                   | counter                     | pool name, `error.type`                                                   | `instrumentPrisma` (pool `error` event)                             |
-
-Conventions: a transaction timeout is not a third outcome — it shows as `idempotix.transaction.outcome=rollback` with `error.type` set to the driver's code (Prisma `P2028`), because only the driver knows it timed out and the interceptor must stay ORM-agnostic. `error.type` is always an error `code` or class name, never a message. `instrumentPrisma` is standalone by design (usable without `IdempotixModule`) and every metric group is opt-in via what you pass (`client`, `pool`, `queries: false`). Both `OtelIdempotencyMetrics` and `instrumentPrisma` accept a `meterProvider` so tests use an SDK `MeterProvider` + `InMemoryMetricExporter` instead of globals.
+Conventions: a transaction timeout is not a third outcome — it shows as `idempotix.transaction.outcome=rollback` with `error.type` set to the driver's code (Prisma `P2028`), because only the driver knows it timed out and the interceptor must stay ORM-agnostic. `error.type` is always an error `code` or class name, never a message. `instrumentPrisma` / `instrumentTypeorm` / `instrumentPgPool` are standalone by design (usable without `IdempotixModule`) and every metric group is opt-in via what you pass. `OtelIdempotencyMetrics` and the instrumenters accept a `meterProvider` so tests use an SDK `MeterProvider` + `InMemoryMetricExporter` instead of globals. TypeORM query metrics come from the `afterQuery` subscriber event and set no `db.collection.name`; Prisma's `$extends` hook does set it (the model name).
 
 ## Milestone Order
 
@@ -82,8 +71,8 @@ Conventions: a transaction timeout is not a third outcome — it shows as `idemp
 4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers). **(done — store only; instrumentation is milestone 6)**
 5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests. **(done)**
 6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation. **(done)**
-7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites. **(this repo's current state)**
-8. Documentation, examples app, first release.
+7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites. **(done)**
+8. Documentation, examples app, first release. **(docs + `examples/nestjs-prisma` done — this repo's current state; the first release is a separate, explicitly approved step: changesets, versions, npm token, dry run first)**
 
 Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), transactional outbox, key propagation to downstream services via `nestjs-cls` + HTTP client interceptor, further adapters (Kysely, Drizzle, MikroORM).
 
@@ -107,7 +96,11 @@ Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), tra
 
 ## Running DB-backed tests locally
 
-`@sabeesoft/idempotix-prisma` (and later the TypeORM package) run the contract suite against a real PostgreSQL via Testcontainers, which needs a Docker-compatible runtime. On the primary dev machine that is rootless podman: `systemctl --user enable --now podman.socket` plus `docker.host=unix:///run/user/1000/podman/podman.sock` in `~/.testcontainers.properties`. The test file disables the Ryuk reaper when it sees a podman socket (`TESTCONTAINERS_RYUK_DISABLED` — testcontainers-node only reads this from the environment, not from the properties file) and stops its own containers. Without a runtime the suite is reported as skipped. `prisma generate` runs as `pretest` and writes the client to `packages/*/src/generated/` (gitignored, lint-ignored, never published); the generated files are `@ts-nocheck`. `prisma`'s npm `latest` tag is already an 8.x release candidate — keep the CLI and client pinned to `^7.x` together.
+`@sabeesoft/idempotix-prisma` (and later the TypeORM package) run the contract suite against a real PostgreSQL via Testcontainers, which needs a Docker-compatible runtime. On the primary dev machine that is rootless podman: `systemctl --user enable --now podman.socket` plus `docker.host=unix:///run/user/1000/podman/podman.sock` in `~/.testcontainers.properties`. The test file disables the Ryuk reaper when it sees a podman socket (`TESTCONTAINERS_RYUK_DISABLED` — testcontainers-node only reads this from the environment, not from the properties file) and stops its own containers. Without a runtime the suite is reported as skipped. `prisma generate` is a Turborepo `generate` task that `build`/`lint`/`typecheck`/`test` depend on (packages without a `generate` script are skipped) and writes the client to `packages/*/src/generated/` and `examples/*/src/generated/` (gitignored, lint-ignored, never published); the generated files are `@ts-nocheck`. It must not be a `pre*` npm hook: Turborepo runs lint/typecheck/test in parallel, and concurrent `prisma generate` runs in one package clobber each other's output (EEXIST/ENOENT). `prisma`'s npm `latest` tag is already an 8.x release candidate — keep the CLI and client pinned to `^7.x` together.
+
+## Example app
+
+`examples/nestjs-prisma` is a private workspace package (`examples/*`, ignored by Changesets) that wires the recommended stack end to end and is the source of the `curl` walkthrough in its README. It is linted and typechecked in CI (its `pretypecheck` runs `prisma generate`) but has no automated tests — the packages' e2e suites cover the same wiring; keep it in sync when public APIs change.
 
 ## Contribution Workflow
 

@@ -1,0 +1,41 @@
+{
+  "name": "@idempotix-examples/nestjs-prisma",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runnable example: NestJS 12 + Prisma 7 + @nestjs-cls/transactional + idempotix + OpenTelemetry (Prometheus).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "generate": "prisma generate",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "dev": "pnpm build && pnpm start",
+    "db:push": "prisma db push",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "clean": "rimraf dist src/generated"
+  },
+  "dependencies": {
+    "@nestjs-cls/transactional": "^3.3.0",
+    "@nestjs-cls/transactional-adapter-prisma": "^1.4.0",
+    "@nestjs/common": "^12.0.3",
+    "@nestjs/core": "^12.0.3",
+    "@nestjs/platform-express": "^12.0.3",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-prometheus": "^0.222.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@sabeesoft/idempotix-core": "workspace:*",
+    "@sabeesoft/idempotix-nestjs": "workspace:*",
+    "@sabeesoft/idempotix-prisma": "workspace:*",
+    "nestjs-cls": "^6.3.0",
+    "pg": "^8.23.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "prisma": "^7.10.0"
+  }
+}

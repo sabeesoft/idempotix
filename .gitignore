@@ -4,6 +4,7 @@ dist/
 
 # Prisma client generated for tests (prisma generate), never published
 packages/*/src/generated/
+examples/*/src/generated/
 .turbo/
 coverage/
 

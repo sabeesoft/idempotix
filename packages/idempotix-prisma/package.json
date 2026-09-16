@@ -33,10 +33,9 @@
     "dev": "tsup --watch",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "prisma:generate": "prisma generate",
-    "pretest": "prisma generate",
     "test": "vitest run",
-    "clean": "rimraf dist src/generated"
+    "clean": "rimraf dist src/generated",
+    "generate": "prisma generate"
   },
   "dependencies": {
     "@sabeesoft/idempotix-core": "workspace:*",
