@@ -111,6 +111,34 @@ async settle(key: string, order: Order) {
 
 `run()` returns `{ replayed, value }` and throws `FingerprintMismatchError` / `ConflictInProgressError` from `@sabeesoft/idempotix-core` (map them yourself if they must become HTTP responses). It never opens a transaction: keep the acquire and the business write inside one transaction of your own (`@Transactional()` on the method, for instance). If you commit a `processing` record before completing it, a reclaim after `lockTtl` can race the original writer.
 
+## Metrics
+
+Metrics are on by default and go through `@opentelemetry/api` only — until your app registers a `MeterProvider`, every instrument is a no-op. Meter name `idempotix`; units are seconds.
+
+| Metric                           | Type                                         | Attributes                                                                                                                                                                               |
+| -------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `idempotix.requests`             | counter `{request}`                          | `http.route`, `idempotix.outcome` = `acquired` \| `reclaimed` \| `replayed` \| `conflict` \| `fingerprint_mismatch` \| `key_generated`                                                   |
+| `idempotix.processing`           | up-down counter `{request}`                  | `http.route`                                                                                                                                                                             |
+| `idempotix.handler.duration`     | histogram `s`                                | `http.route`, `idempotix.result` = `success` \| `error`                                                                                                                                  |
+| `idempotix.transaction.duration` | histogram `s` (only with `runInTransaction`) | `http.route`, `idempotix.transaction.outcome` = `commit` \| `rollback`, `error.type` (the error's `code`, e.g. Prisma `P2028` for an interactive-transaction timeout, or its class name) |
+
+`http.route` is the route template (`POST /payments/:id`), never the resolved URL; no attribute can carry an idempotency key, request id or tenant. `metrics: 'noop'` disables them, a custom `IdempotencyMetrics` replaces them. For the database-side `db.client.*` metrics see `@sabeesoft/idempotix-prisma`'s `instrumentPrisma()`.
+
+Minimal SDK bootstrap (run before Nest starts):
+
+```ts
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+
+const sdk = new NodeSDK({
+  metricReader: new PeriodicExportingMetricReader({ exporter: new OTLPMetricExporter() }),
+});
+sdk.start();
+```
+
+Resource attributes (`service.name`, `service.instance.id`, …) come from your SDK setup; that is what lets a dashboard sum `db.client.connection.count` across services and replicas and compare it with the database's `max_connections`.
+
 ## Known limitations
 
 - Replays re-use the route's static status (`@HttpCode()` or Nest's 201/200 default). A status set dynamically through `@Res()` is not replayed.

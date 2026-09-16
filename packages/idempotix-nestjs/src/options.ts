@@ -7,6 +7,7 @@ import {
   type IdempotencyMetrics,
   type IdempotencyStore,
 } from '@sabeesoft/idempotix-core';
+import { OtelIdempotencyMetrics } from './otel-metrics.js';
 
 export const IDEMPOTIX_OPTIONS = Symbol('IDEMPOTIX_OPTIONS');
 
@@ -33,8 +34,12 @@ export interface IdempotixModuleOptions {
    * outside any transaction managed by idempotix.
    */
   runInTransaction?: <R>(fn: () => Promise<R>) => Promise<R>;
-  /** Default: no-op metrics. */
-  metrics?: IdempotencyMetrics;
+  /**
+   * `'otel'` (default) emits OpenTelemetry metrics through `@opentelemetry/api`
+   * — a no-op until the app registers a MeterProvider. `'noop'` disables them;
+   * a custom `IdempotencyMetrics` replaces them.
+   */
+  metrics?: IdempotencyMetrics | 'otel' | 'noop';
   /** Default: system clock. */
   clock?: Clock;
 }
@@ -46,9 +51,27 @@ export interface ResolvedIdempotixOptions {
   keyExtractor: (request: unknown) => string | undefined;
   onMissingKey: OnMissingKey;
   tenant: (request: unknown) => string | null | undefined;
-  runInTransaction: <R>(fn: () => Promise<R>) => Promise<R>;
+  /** `undefined` when the app supplied no transaction runner (pass-through, no transaction metric). */
+  runInTransaction: (<R>(fn: () => Promise<R>) => Promise<R>) | undefined;
   metrics: IdempotencyMetrics;
   clock: Clock;
+}
+
+function resolveMetrics(option: IdempotixModuleOptions['metrics']): IdempotencyMetrics {
+  const raw: unknown = option;
+  if (option === undefined || option === 'otel') {
+    return new OtelIdempotencyMetrics();
+  }
+  if (option === 'noop') {
+    return new NoopMetrics();
+  }
+  if (typeof option === 'object' && typeof option.recordOutcome === 'function') {
+    return option;
+  }
+  throw new IdempotixConfigurationError(
+    'metrics',
+    `expected "otel", "noop" or an IdempotencyMetrics implementation, got ${typeof raw === 'string' ? `"${raw}"` : typeof raw}`,
+  );
 }
 
 export class IdempotixConfigurationError extends IdempotixError {
@@ -113,8 +136,8 @@ export function resolveOptions(options: IdempotixModuleOptions): ResolvedIdempot
     keyExtractor: options.keyExtractor ?? headerExtractor(options.keyHeader ?? DEFAULT_KEY_HEADER),
     onMissingKey,
     tenant: options.tenant ?? (() => null),
-    runInTransaction: options.runInTransaction ?? ((fn) => fn()),
-    metrics: options.metrics ?? new NoopMetrics(),
+    runInTransaction: options.runInTransaction,
+    metrics: resolveMetrics(options.metrics),
     clock: options.clock ?? new SystemClock(),
   };
 }

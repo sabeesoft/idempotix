@@ -21,3 +21,10 @@ export { IdempotixService } from './idempotix.service.js';
 
 export type { IdempotixModuleAsyncOptions } from './idempotix.module.js';
 export { IdempotixModule } from './idempotix.module.js';
+
+export type { OtelIdempotencyMetricsOptions } from './otel-metrics.js';
+export {
+  IDEMPOTIX_METER_NAME,
+  IDEMPOTIX_METER_VERSION,
+  OtelIdempotencyMetrics,
+} from './otel-metrics.js';

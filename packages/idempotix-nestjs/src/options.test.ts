@@ -1,6 +1,7 @@
 import { InMemoryIdempotencyStore, NoopMetrics, SystemClock } from '@sabeesoft/idempotix-core';
 import { describe, expect, it } from 'vitest';
 import { IdempotixConfigurationError, resolveOptions } from './options.js';
+import { OtelIdempotencyMetrics } from './otel-metrics.js';
 
 const store = new InMemoryIdempotencyStore();
 
@@ -11,8 +12,18 @@ describe('resolveOptions', () => {
     expect(resolved.lockTtlMs).toBe(60_000);
     expect(resolved.onMissingKey).toBe('generate');
     expect(resolved.tenant({})).toBeNull();
-    expect(resolved.metrics).toBeInstanceOf(NoopMetrics);
+    expect(resolved.metrics).toBeInstanceOf(OtelIdempotencyMetrics);
+    expect(resolved.runInTransaction).toBeUndefined();
     expect(resolved.clock).toBeInstanceOf(SystemClock);
+  });
+
+  it('resolves the metrics option', () => {
+    expect(resolveOptions({ store, metrics: 'noop' }).metrics).toBeInstanceOf(NoopMetrics);
+    expect(resolveOptions({ store, metrics: 'otel' }).metrics).toBeInstanceOf(
+      OtelIdempotencyMetrics,
+    );
+    const custom = new NoopMetrics();
+    expect(resolveOptions({ store, metrics: custom }).metrics).toBe(custom);
   });
 
   it('reads the Idempotency-Key header case-insensitively and trims it', () => {
@@ -28,16 +39,12 @@ describe('resolveOptions', () => {
     expect(keyExtractor({ headers: { 'x-request-key': 'k' } })).toBe('k');
   });
 
-  it('runInTransaction defaults to a pass-through', async () => {
-    const { runInTransaction } = resolveOptions({ store });
-    await expect(runInTransaction(() => Promise.resolve(42))).resolves.toBe(42);
-  });
-
   it.each([
     [{ store, ttl: '1x' }, 'ttl'],
     [{ store, lockTtl: 'soon' }, 'lockTtl'],
     [{ store, onMissingKey: 'explode' as never }, 'onMissingKey'],
     [{ store, keyHeader: ' ' }, 'keyHeader'],
+    [{ store, metrics: 'prometheus' as never }, 'metrics'],
     [{ store: {} as never }, 'store'],
   ])('rejects invalid configuration %#', (options, option) => {
     expect(() => resolveOptions(options)).toThrow(IdempotixConfigurationError);

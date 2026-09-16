@@ -59,6 +59,39 @@ The `client` callback runs on every store call, which is what lets the store fol
 - `markCompleted` stores the response body as `jsonb`; a JSON `null` body (e.g. a 204) is stored as `'null'::jsonb`, distinct from SQL `NULL`.
 - The only identifier ever interpolated into SQL is the table name, validated as `<table>` or `<schema>.<table>` (letters, digits, underscores) — all values are bound parameters.
 
+## Metrics: `instrumentPrisma()`
+
+Standalone OpenTelemetry instrumentation for a Prisma 7 + `pg` setup — it does not need `IdempotixModule`, and `IdempotixModule` does not need it. Everything goes through `@opentelemetry/api`; nothing is emitted until your app registers a `MeterProvider`.
+
+```ts
+import { PrismaPg } from '@prisma/adapter-pg';
+import { instrumentPrisma } from '@sabeesoft/idempotix-prisma';
+import pg from 'pg';
+import { PrismaClient } from './generated/prisma/client.js';
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 20 });
+const { client: prisma, dispose } = instrumentPrisma({
+  client: new PrismaClient({ adapter: new PrismaPg(pool) }),
+  pool,
+  poolName: 'primary', // db.client.connection.pool.name
+  // queries: false,     // pool metrics only
+});
+// Use — and inject — `prisma`, the returned (extended) client. Call dispose() on shutdown.
+```
+
+| Metric                                  | Type                                      | Attributes                                                                                                                                           |
+| --------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `db.client.operation.duration`          | histogram `s`                             | `db.system.name=postgresql`, `db.operation.name` (`findMany`, `$queryRawUnsafe`, …), `db.collection.name` (model, when any), `error.type` on failure |
+| `db.client.connection.count`            | observable up-down counter `{connection}` | pool name, `db.client.connection.state` = `idle` \| `used`                                                                                           |
+| `db.client.connection.max`              | observable up-down counter `{connection}` | pool name                                                                                                                                            |
+| `db.client.connection.pending_requests` | observable up-down counter `{request}`    | pool name                                                                                                                                            |
+| `db.client.connection.wait_time`        | histogram `s`                             | pool name                                                                                                                                            |
+| `db.client.connection.use_time`         | histogram `s`                             | pool name                                                                                                                                            |
+| `db.client.connection.timeouts`         | counter `{timeout}`                       | pool name                                                                                                                                            |
+| `idempotix.db.pool.errors`              | counter `{error}`                         | pool name, `error.type`                                                                                                                              |
+
+Names follow the OpenTelemetry database semantic conventions (`db.client.operation.duration` is stable; the connection metrics are still marked _Development_ upstream). Query text and arguments never become attributes. `pg` emits no "waiting" event, so acquisition latency and timeouts are measured by wrapping the pool's `connect()` — `dispose()` restores it. Operations inside `$transaction(async (tx) => …)` are covered too.
+
 ## Expired rows
 
 The store never deletes rows on its own. Run this from a scheduled job:

@@ -38,6 +38,17 @@ class RecordingMetrics implements IdempotencyMetrics {
   recordHandlerDuration(): void {
     // not asserted here
   }
+  readonly transactions: { outcome: 'commit' | 'rollback'; errorType?: string }[] = [];
+  recordTransaction(
+    _seconds: number,
+    attrs: MetricAttributes & { outcome: 'commit' | 'rollback'; errorType?: string },
+  ): void {
+    this.transactions.push(
+      attrs.errorType === undefined
+        ? { outcome: attrs.outcome }
+        : { outcome: attrs.outcome, errorType: attrs.errorType },
+    );
+  }
 }
 
 /** Shared mutable test state the controller reports into. */
@@ -336,6 +347,42 @@ describe('IdempotixInterceptor (in-memory store)', () => {
     expect(probe.handlerCalls).toBe(2);
     expect(first.body).toEqual({ debit: 'debit-1', credit: 'credit-1' });
     expect(second.body).toEqual(first.body);
+  });
+});
+
+describe('IdempotixInterceptor with runInTransaction', () => {
+  it('records commit and rollback outcomes around the app transaction runner', async () => {
+    const calls: string[] = [];
+    const { app, probe, metrics } = await bootstrap({
+      runInTransaction: async (fn) => {
+        calls.push('begin');
+        try {
+          const result = await fn();
+          calls.push('commit');
+          return result;
+        } catch (err) {
+          calls.push('rollback');
+          throw err;
+        }
+      },
+    });
+    try {
+      const s = app.getHttpServer() as Parameters<typeof request>[0];
+      await request(s).post('/payments/acc-1').set('Idempotency-Key', 'tx-ok').send({ amount: 1 });
+      probe.fail = true;
+      const failed = await request(s)
+        .post('/payments/acc-1')
+        .set('Idempotency-Key', 'tx-fail')
+        .send({ amount: 1 });
+      expect(failed.status).toBe(500);
+      expect(calls).toEqual(['begin', 'commit', 'begin', 'rollback']);
+      expect(metrics.transactions).toEqual([
+        { outcome: 'commit' },
+        { outcome: 'rollback', errorType: 'Error' },
+      ]);
+    } finally {
+      await app.close();
+    }
   });
 });
 

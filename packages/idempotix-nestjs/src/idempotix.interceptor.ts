@@ -92,7 +92,7 @@ export class IdempotixInterceptor implements NestInterceptor {
     const responseCode = statusCodeFor(context);
 
     try {
-      const result = await options.runInTransaction(() =>
+      const result = await this.inTransaction(route, () =>
         runIdempotent({
           store: options.store,
           metrics: options.metrics,
@@ -127,4 +127,41 @@ export class IdempotixInterceptor implements NestInterceptor {
       throw err;
     }
   }
+
+  /** Runs `fn` through the app's transaction runner, if configured, and records the outcome. */
+  private async inTransaction<R>(route: string, fn: () => Promise<R>): Promise<R> {
+    const { runInTransaction, metrics, clock } = this.options;
+    if (!runInTransaction) {
+      return fn();
+    }
+    const start = clock.now().getTime();
+    const seconds = (): number => (clock.now().getTime() - start) / 1000;
+    try {
+      const result = await runInTransaction(fn);
+      metrics.recordTransaction(seconds(), { route, outcome: 'commit' });
+      return result;
+    } catch (err) {
+      metrics.recordTransaction(seconds(), {
+        route,
+        outcome: 'rollback',
+        errorType: errorType(err),
+      });
+      throw err;
+    }
+  }
+}
+
+/** A bounded identifier for an error: its `code` (e.g. a driver error code) or class name. */
+function errorType(err: unknown): string {
+  if (typeof err === 'object' && err !== null) {
+    const code = (err as { code?: unknown }).code;
+    if (typeof code === 'string' && code.length > 0) {
+      return code;
+    }
+    const name = (err as { name?: unknown }).name;
+    if (typeof name === 'string' && name.length > 0) {
+      return name;
+    }
+  }
+  return 'Error';
 }

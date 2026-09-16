@@ -41,6 +41,10 @@ class RecordingMetrics implements IdempotencyMetrics {
   ): void {
     this.durations.push({ seconds, outcome: attrs.outcome });
   }
+
+  recordTransaction(): void {
+    // core never runs transactions itself
+  }
 }
 
 const ROUTE = 'POST /payments/:id';

@@ -24,6 +24,15 @@ export interface IdempotencyMetrics {
     seconds: number,
     attrs: MetricAttributes & { outcome: 'success' | 'error' },
   ): void;
+  /**
+   * Emitted by integrations that run the guarded handler inside a transaction.
+   * `errorType` is the thrown error's `code` or class name — a bounded set,
+   * e.g. a driver's transaction-timeout code — never a message or an id.
+   */
+  recordTransaction(
+    seconds: number,
+    attrs: MetricAttributes & { outcome: 'commit' | 'rollback'; errorType?: string },
+  ): void;
 }
 
 export class NoopMetrics implements IdempotencyMetrics {
@@ -40,6 +49,10 @@ export class NoopMetrics implements IdempotencyMetrics {
   }
 
   recordHandlerDuration(): void {
+    // no-op
+  }
+
+  recordTransaction(): void {
     // no-op
   }
 }

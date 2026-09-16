@@ -56,7 +56,22 @@ NestJS packages, `@prisma/client`, `typeorm`, `nestjs-cls`, `@nestjs-cls/transac
 
 ## Observability Convention
 
-Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete OTel SDK or exporter — the consuming app owns SDK/exporter setup, and without one registered, metrics must be automatic no-ops. Metric attributes are limited to low-cardinality values (route template, operation, outcome, pool name); never idempotency keys, request ids, user ids, or raw URLs.
+Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete OTel SDK or exporter — the consuming app owns SDK/exporter setup, and without one registered, metrics must be automatic no-ops. Metric attributes are limited to low-cardinality values (route template, operation, outcome, pool name); never idempotency keys, request ids, user ids, or raw URLs. Core's `MetricAttributes` type has a single `route` field for exactly this reason.
+
+Canonical metric catalogue (meter `idempotix`, units in seconds):
+
+| Metric                                                                       | Instrument                  | Attributes                                                                | Emitted by                                                          |
+| ---------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `idempotix.requests`                                                         | counter                     | `http.route`, `idempotix.outcome`                                         | `OtelIdempotencyMetrics` (nestjs)                                   |
+| `idempotix.processing`                                                       | up-down counter             | `http.route`                                                              | same                                                                |
+| `idempotix.handler.duration`                                                 | histogram                   | `http.route`, `idempotix.result`                                          | same                                                                |
+| `idempotix.transaction.duration`                                             | histogram                   | `http.route`, `idempotix.transaction.outcome`, `error.type`               | interceptor around `runInTransaction`                               |
+| `db.client.operation.duration`                                               | histogram                   | `db.system.name`, `db.operation.name`, `db.collection.name`, `error.type` | `instrumentPrisma` `$extends` hook                                  |
+| `db.client.connection.{count,max,pending_requests}`                          | observable up-down counters | `db.client.connection.pool.name` (+ `state` on `count`)                   | `instrumentPrisma` batch callback                                   |
+| `db.client.connection.{wait_time,use_time}`, `db.client.connection.timeouts` | histograms / counter        | pool name                                                                 | `instrumentPrisma` (wrapped `pool.connect`, acquire/release events) |
+| `idempotix.db.pool.errors`                                                   | counter                     | pool name, `error.type`                                                   | `instrumentPrisma` (pool `error` event)                             |
+
+Conventions: a transaction timeout is not a third outcome — it shows as `idempotix.transaction.outcome=rollback` with `error.type` set to the driver's code (Prisma `P2028`), because only the driver knows it timed out and the interceptor must stay ORM-agnostic. `error.type` is always an error `code` or class name, never a message. `instrumentPrisma` is standalone by design (usable without `IdempotixModule`) and every metric group is opt-in via what you pass (`client`, `pool`, `queries: false`). Both `OtelIdempotencyMetrics` and `instrumentPrisma` accept a `meterProvider` so tests use an SDK `MeterProvider` + `InMemoryMetricExporter` instead of globals.
 
 ## Milestone Order
 
@@ -64,8 +79,8 @@ Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete O
 2. `@sabeesoft/idempotix-core` + ports + in-memory store + unit tests. **(done)**
 3. Shared contract test suite. **(done)**
 4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers). **(done — store only; instrumentation is milestone 6)**
-5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests. **(this repo's current state)**
-6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation.
+5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests. **(done)**
+6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation. **(this repo's current state)**
 7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites.
 8. Documentation, examples app, first release.
 

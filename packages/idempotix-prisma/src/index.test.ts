@@ -3,7 +3,10 @@ import * as idempotixPrisma from './index.js';
 
 describe('public API surface', () => {
   it('exports every documented value', () => {
-    expect(Object.keys(idempotixPrisma).sort()).toEqual(['createPrismaIdempotencyStore']);
+    expect(Object.keys(idempotixPrisma).sort()).toEqual([
+      'createPrismaIdempotencyStore',
+      'instrumentPrisma',
+    ]);
   });
 
   it('rejects unsafe table names before touching the database', () => {

@@ -12,6 +12,9 @@ describe('public API surface', () => {
         'IdempotixInterceptor',
         'IdempotixModule',
         'IdempotixService',
+        'IDEMPOTIX_METER_NAME',
+        'IDEMPOTIX_METER_VERSION',
+        'OtelIdempotencyMetrics',
       ].sort(),
     );
   });
