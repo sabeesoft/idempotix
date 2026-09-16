@@ -1,5 +1,10 @@
+/**
+ * `key_generated` is emitted by integrations when the caller supplied no key
+ * and one was generated for them — the request ran, but with no real
+ * idempotency protection against a retry.
+ */
 export type IdempotencyOutcome =
-  'acquired' | 'reclaimed' | 'replayed' | 'conflict' | 'fingerprint_mismatch';
+  'acquired' | 'reclaimed' | 'replayed' | 'conflict' | 'fingerprint_mismatch' | 'key_generated';
 
 /**
  * Deliberately the only attribute shape metrics calls can accept: a

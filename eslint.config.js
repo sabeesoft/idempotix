@@ -41,6 +41,8 @@ export default defineConfig([
         'error',
         { allowNumber: true, allowBoolean: true },
       ],
+      // NestJS modules are (often empty) decorated classes by design.
+      '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
     },
   },
   {

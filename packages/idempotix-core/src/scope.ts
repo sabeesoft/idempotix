@@ -5,7 +5,7 @@ const SEPARATOR = String.fromCharCode(31);
 const DEFAULT_TENANT = '_';
 
 export interface ScopeParts {
-  tenant?: string | null;
+  tenant?: string | null | undefined;
   route: string;
 }
 
