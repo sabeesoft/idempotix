@@ -1,0 +1,33 @@
+// Reference schema for @sabeesoft/idempotix-prisma.
+//
+// Copy the `IdempotencyKey` model into your own schema.prisma (keep the
+// @@map / @map names, or pass `tableName` to createPrismaIdempotencyStore).
+// The package's own copy exists for its integration tests.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model IdempotencyKey {
+  scope        String
+  key          String
+  requestHash  String   @map("request_hash")
+  /// "processing" | "completed"
+  status       String
+  responseCode Int?     @map("response_code")
+  responseBody Json?    @map("response_body")
+  /// Lock expiry while processing; replay-retention expiry once completed.
+  lockedUntil  DateTime @map("locked_until") @db.Timestamptz(3)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@id([scope, key])
+  @@index([lockedUntil])
+  @@map("idempotency_keys")
+}

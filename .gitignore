@@ -1,6 +1,9 @@
 node_modules/
 dist/
 *.tsbuildinfo
+
+# Prisma client generated for tests (prisma generate), never published
+packages/*/src/generated/
 .turbo/
 coverage/
 

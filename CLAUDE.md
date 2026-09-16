@@ -62,8 +62,8 @@ Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete O
 
 1. Monorepo skeleton, tooling, CI, package publishing setup. **(done)**
 2. `@sabeesoft/idempotix-core` + ports + in-memory store + unit tests. **(done)**
-3. Shared contract test suite. **(this repo's current state)**
-4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers).
+3. Shared contract test suite. **(done)**
+4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers). **(this repo's current state — store only; instrumentation is milestone 6)**
 5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests.
 6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation.
 7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites.
@@ -86,6 +86,10 @@ Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), tra
 - Every user-facing change needs a changeset (`pnpm changeset`).
 - Packages publish to public npm under the `@sabeesoft` scope (`publishConfig.access: public`). The project's own `.npmrc` explicitly pins `@sabeesoft:registry` to `https://registry.npmjs.org/` — do not remove this. Some development machines for this account have a global `~/.npmrc` that maps the `@sabeesoft` scope to GitHub Packages instead (used by other, unrelated projects); without this project-level override, `pnpm publish` here would silently target the wrong registry.
 - Release automation (GitHub Actions + `changesets/action`) opens a "Version Packages" PR and publishes on merge to `main`. No automatic publish happens outside that flow.
+
+## Running DB-backed tests locally
+
+`@sabeesoft/idempotix-prisma` (and later the TypeORM package) run the contract suite against a real PostgreSQL via Testcontainers, which needs a Docker-compatible runtime. On the primary dev machine that is rootless podman: `systemctl --user enable --now podman.socket` plus `docker.host=unix:///run/user/1000/podman/podman.sock` in `~/.testcontainers.properties`. The test file disables the Ryuk reaper when it sees a podman socket (`TESTCONTAINERS_RYUK_DISABLED` — testcontainers-node only reads this from the environment, not from the properties file) and stops its own containers. Without a runtime the suite is reported as skipped. `prisma generate` runs as `pretest` and writes the client to `packages/*/src/generated/` (gitignored, lint-ignored, never published); the generated files are `@ts-nocheck`. `prisma`'s npm `latest` tag is already an 8.x release candidate — keep the CLI and client pinned to `^7.x` together.
 
 ## Contribution Workflow
 

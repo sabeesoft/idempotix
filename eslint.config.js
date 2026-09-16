@@ -6,7 +6,13 @@ import globals from 'globals';
 
 export default defineConfig([
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/.turbo/**', '**/node_modules/**'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.turbo/**',
+      '**/node_modules/**',
+      '**/src/generated/**',
+    ],
   },
   {
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],

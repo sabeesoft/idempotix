@@ -2,6 +2,11 @@ packages:
   - 'packages/*'
 allowBuilds:
   esbuild: true
+  prisma: true
+  '@prisma/engines': true
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
 minimumReleaseAgeExclude:
   - '@vitest/coverage-v8@5.0.1'
   - '@vitest/mocker@5.0.1'

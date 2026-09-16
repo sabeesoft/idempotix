@@ -1,8 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { IDEMPOTIX_PRISMA_VERSION } from './index.js';
+import * as idempotixPrisma from './index.js';
 
-describe('package scaffold', () => {
-  it('exports a placeholder marker', () => {
-    expect(IDEMPOTIX_PRISMA_VERSION).toBe('0.0.0-milestone-1');
+describe('public API surface', () => {
+  it('exports every documented value', () => {
+    expect(Object.keys(idempotixPrisma).sort()).toEqual(['createPrismaIdempotencyStore']);
+  });
+
+  it('rejects unsafe table names before touching the database', () => {
+    const client = () => {
+      throw new Error('must not be called');
+    };
+    expect(() =>
+      idempotixPrisma.createPrismaIdempotencyStore({ client, tableName: 'keys; DROP TABLE x' }),
+    ).toThrow(/Invalid idempotency table name/);
+    expect(() =>
+      idempotixPrisma.createPrismaIdempotencyStore({ client, tableName: 'a.b.c' }),
+    ).toThrow(/Invalid idempotency table name/);
+    expect(() =>
+      idempotixPrisma.createPrismaIdempotencyStore({ client, tableName: 'app.idempotency_keys' }),
+    ).not.toThrow();
   });
 });

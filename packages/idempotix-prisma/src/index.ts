@@ -1,9 +1,9 @@
 /**
  * @sabeesoft/idempotix-prisma
  *
- * Prisma store adapter and query/transaction instrumentation for idempotix.
- *
- * Milestone 1 scaffold placeholder — no business logic yet.
- * Real exports land in later milestones.
+ * Prisma 7 / PostgreSQL store adapter for idempotix. Query, transaction and
+ * pool instrumentation follow in a later milestone.
  */
-export const IDEMPOTIX_PRISMA_VERSION = '0.0.0-milestone-1';
+
+export type { PrismaIdempotencyStoreOptions, PrismaRawClient } from './store.js';
+export { createPrismaIdempotencyStore } from './store.js';
