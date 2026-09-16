@@ -1,9 +1,10 @@
 /**
  * @sabeesoft/idempotix-testing
  *
- * Shared adapter contract test suite for idempotix store implementations.
- *
- * Milestone 1 scaffold placeholder — no business logic yet.
- * Real exports land in later milestones.
+ * Shared, runner-agnostic contract test suite for `IdempotencyStore`
+ * implementations. Every adapter — Prisma, TypeORM, in-memory, third-party —
+ * must pass it unchanged.
  */
-export const IDEMPOTIX_TESTING_VERSION = '0.0.0-milestone-1';
+
+export type { StoreContractOptions, TestRunner } from './contract.js';
+export { runStoreContractSuite } from './contract.js';

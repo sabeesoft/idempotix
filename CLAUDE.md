@@ -61,8 +61,8 @@ Instrument via `@opentelemetry/api` only. Never depend on or bundle a concrete O
 ## Milestone Order
 
 1. Monorepo skeleton, tooling, CI, package publishing setup. **(done)**
-2. `@sabeesoft/idempotix-core` + ports + in-memory store + unit tests. **(this repo's current state)**
-3. Shared contract test suite.
+2. `@sabeesoft/idempotix-core` + ports + in-memory store + unit tests. **(done)**
+3. Shared contract test suite. **(this repo's current state)**
 4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers).
 5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests.
 6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation.
@@ -78,6 +78,7 @@ Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), tra
 - `moduleResolution: NodeNext` — relative imports need explicit `.js` extensions even in `.ts` source files (e.g. `import { x } from './x.js'`).
 - Each package builds dual ESM+CJS via a single shared `tsup.config.base.ts` factory (`createTsupConfig()`), so bundler behaviour is changed in exactly one place for every package at once.
 - ESLint is a single root flat config (`eslint.config.js`) using `typescript-eslint`'s `strictTypeChecked` + `stylisticTypeChecked`; no per-package ESLint config is needed.
+- `@sabeesoft/idempotix-testing`'s `runStoreContractSuite()` is runner-agnostic on purpose: the caller injects `describe`/`it`/`beforeEach`/`afterEach` and assertions use `node:assert/strict`, so third-party adapter authors on Jest or `node:test` can run it without a `vitest` peer dependency. Every store adapter in this repo must register it in its own test file (see `packages/idempotix-testing/src/contract.test.ts` for the in-memory example); DB-backed adapters should also pass `runInTransaction` so the rollback scenario runs instead of being skipped.
 
 ## Versioning & Release
 

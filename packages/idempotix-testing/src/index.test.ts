@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { IDEMPOTIX_TESTING_VERSION } from './index.js';
+import * as idempotixTesting from './index.js';
 
-describe('package scaffold', () => {
-  it('exports a placeholder marker', () => {
-    expect(IDEMPOTIX_TESTING_VERSION).toBe('0.0.0-milestone-1');
+describe('public API surface', () => {
+  it('exports every documented value', () => {
+    expect(Object.keys(idempotixTesting).sort()).toEqual(['runStoreContractSuite']);
   });
 });
