@@ -42,13 +42,14 @@ Correctness under concurrency and retries matters more than convenience.
 
 npm scope: `@sabeesoft`. All packages live under `packages/`.
 
-| Package                        | Responsibility                                                                                                                                                                        | Depends on |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `@sabeesoft/idempotix-core`    | State machine, fingerprinting (canonical JSON + hash), scope building, policies (TTL, required key, methods), domain errors, ports, in-memory store for tests. No NestJS/ORM imports. | —          |
-| `@sabeesoft/idempotix-nestjs`  | `IdempotixModule.forRoot/forRootAsync`, `@Idempotent()`, interceptor (key extraction, replay, response headers), explicit service helper, metrics wiring.                             | core       |
-| `@sabeesoft/idempotix-prisma`  | Prisma store adapter, Prisma query/transaction instrumentation via `$extends`, pg pool metrics, schema snippet.                                                                       | core       |
-| `@sabeesoft/idempotix-typeorm` | TypeORM store adapter, entity, query/transaction instrumentation, pg pool metrics via the DataSource's driver.                                                                        | core       |
-| `@sabeesoft/idempotix-testing` | Shared adapter contract test suite so any store adapter (including third-party ones) can verify itself.                                                                               | core       |
+| Package                        | Responsibility                                                                                                                                                                                         | Depends on |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `@sabeesoft/idempotix-core`    | State machine, fingerprinting (canonical JSON + hash), scope building, policies (TTL, required key, methods), domain errors, ports, in-memory store for tests. No NestJS/ORM imports.                  | —          |
+| `@sabeesoft/idempotix-nestjs`  | `IdempotixModule.forRoot/forRootAsync`, `@Idempotent()`, interceptor (key extraction, replay, response headers), explicit service helper, metrics wiring.                                              | core       |
+| `@sabeesoft/idempotix-prisma`  | Prisma store adapter, Prisma query/transaction instrumentation via `$extends`, pg pool metrics, schema snippet.                                                                                        | core       |
+| `@sabeesoft/idempotix-typeorm` | TypeORM store adapter, entity, query/transaction instrumentation, pg pool metrics via the DataSource's driver.                                                                                         | core       |
+| `@sabeesoft/idempotix-testing` | Shared adapter contract test suite so any store adapter (including third-party ones) can verify itself.                                                                                                | core       |
+| `@sabeesoft/idempotix-pg`      | Shared PostgreSQL support for adapters: the idempotency SQL + row mapping (`postgresIdempotencySql`, `toIdempotencyRecord`) and `pg.Pool` instrumentation (`instrumentPgPool`). Not an adapter itself. | core       |
 
 ## Peer-Dependency Rule
 
@@ -80,8 +81,8 @@ Conventions: a transaction timeout is not a third outcome — it shows as `idemp
 3. Shared contract test suite. **(done)**
 4. `@sabeesoft/idempotix-prisma` store passing the contract suite (Testcontainers). **(done — store only; instrumentation is milestone 6)**
 5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests. **(done)**
-6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation. **(this repo's current state)**
-7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites.
+6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation. **(done)**
+7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites. **(this repo's current state)**
 8. Documentation, examples app, first release.
 
 Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), transactional outbox, key propagation to downstream services via `nestjs-cls` + HTTP client interceptor, further adapters (Kysely, Drizzle, MikroORM).

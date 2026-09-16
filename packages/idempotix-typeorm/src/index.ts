@@ -1,9 +1,18 @@
 /**
  * @sabeesoft/idempotix-typeorm
  *
- * TypeORM store adapter and query/transaction instrumentation for idempotix.
- *
- * Milestone 1 scaffold placeholder — no business logic yet.
- * Real exports land in later milestones.
+ * TypeORM / PostgreSQL store adapter for idempotix, the reference entity, and
+ * OpenTelemetry instrumentation for a TypeORM `DataSource`.
  */
-export const IDEMPOTIX_TYPEORM_VERSION = '0.0.0-milestone-1';
+
+export type { EntityManagerLike, TypeormIdempotencyStoreOptions } from './store.js';
+export { createTypeormIdempotencyStore } from './store.js';
+
+export { IdempotencyKeyEntity } from './entity.js';
+
+export type {
+  DataSourceLike,
+  InstrumentTypeormOptions,
+  InstrumentedTypeorm,
+} from './instrumentation.js';
+export { instrumentTypeorm, operationName } from './instrumentation.js';

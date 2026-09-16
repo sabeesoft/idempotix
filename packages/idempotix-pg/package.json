@@ -1,7 +1,7 @@
 {
-  "name": "@sabeesoft/idempotix-typeorm",
+  "name": "@sabeesoft/idempotix-pg",
   "version": "0.0.0",
-  "description": "TypeORM (PostgreSQL) store adapter and query/pool instrumentation for idempotix.",
+  "description": "Shared PostgreSQL support for idempotix adapters: the idempotency SQL, row mapping and pg pool instrumentation.",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -22,8 +22,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "migration.sql"
+    "dist"
   ],
   "publishConfig": {
     "access": "public"
@@ -37,13 +36,11 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@sabeesoft/idempotix-core": "workspace:*",
-    "@sabeesoft/idempotix-pg": "workspace:*"
+    "@sabeesoft/idempotix-core": "workspace:*"
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "pg": "^8.16.0",
-    "typeorm": "^1.0.0"
+    "pg": "^8.16.0"
   },
   "peerDependenciesMeta": {
     "pg": {
@@ -51,24 +48,8 @@
     }
   },
   "devDependencies": {
-    "@nestjs-cls/transactional": "^3.3.0",
-    "@nestjs-cls/transactional-adapter-typeorm": "^1.4.0",
-    "@nestjs/common": "^12.0.3",
-    "@nestjs/core": "^12.0.3",
-    "@nestjs/platform-express": "^12.0.3",
-    "@nestjs/testing": "^12.0.3",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/sdk-metrics": "^2.11.0",
-    "@sabeesoft/idempotix-nestjs": "workspace:*",
-    "@sabeesoft/idempotix-testing": "workspace:*",
-    "@testcontainers/postgresql": "^12.1.0",
     "@types/pg": "^8.23.1",
-    "@types/supertest": "^7.2.1",
-    "nestjs-cls": "^6.3.0",
-    "pg": "^8.23.0",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "supertest": "^7.2.2",
-    "typeorm": "^1.1.1"
+    "pg": "^8.23.0"
   }
 }

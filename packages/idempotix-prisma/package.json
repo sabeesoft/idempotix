@@ -39,7 +39,8 @@
     "clean": "rimraf dist src/generated"
   },
   "dependencies": {
-    "@sabeesoft/idempotix-core": "workspace:*"
+    "@sabeesoft/idempotix-core": "workspace:*",
+    "@sabeesoft/idempotix-pg": "workspace:*"
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.9.0",

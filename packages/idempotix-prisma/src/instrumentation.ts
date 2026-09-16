@@ -1,9 +1,13 @@
 import { metrics as otelMetrics, type Attributes, type MeterProvider } from '@opentelemetry/api';
+import {
+  DB_SYSTEM_POSTGRESQL,
+  IDEMPOTIX_METER_NAME,
+  IDEMPOTIX_METER_VERSION,
+  errorType,
+  instrumentPgPool,
+  secondsSince,
+} from '@sabeesoft/idempotix-pg';
 import type pg from 'pg';
-
-const METER_NAME = 'idempotix';
-const METER_VERSION = '0.0.0';
-const DB_SYSTEM = 'postgresql';
 
 interface QueryHookArgs {
   model?: string | undefined;
@@ -46,24 +50,6 @@ export interface InstrumentedPrisma<TClient> {
   dispose: () => void;
 }
 
-function errorType(err: unknown): string {
-  if (typeof err === 'object' && err !== null) {
-    const code = (err as { code?: unknown }).code;
-    if (typeof code === 'string' && code.length > 0) {
-      return code;
-    }
-    const name = (err as { name?: unknown }).name;
-    if (typeof name === 'string' && name.length > 0) {
-      return name;
-    }
-  }
-  return 'Error';
-}
-
-function secondsSince(start: bigint): number {
-  return Number(process.hrtime.bigint() - start) / 1e9;
-}
-
 /**
  * OpenTelemetry instrumentation for a Prisma 7 + `pg` setup, usable with or
  * without the rest of idempotix. Emits OTel database semantic-convention
@@ -74,8 +60,8 @@ export function instrumentPrisma<TClient extends ExtendableClient>(
   options: InstrumentPrismaOptions<TClient>,
 ): InstrumentedPrisma<TClient> {
   const meter = (options.meterProvider ?? otelMetrics.getMeterProvider()).getMeter(
-    METER_NAME,
-    METER_VERSION,
+    IDEMPOTIX_METER_NAME,
+    IDEMPOTIX_METER_VERSION,
   );
   const disposers: (() => void)[] = [];
 
@@ -89,7 +75,10 @@ export function instrumentPrisma<TClient extends ExtendableClient>(
       unit: 's',
     });
     const hook: QueryHook = async ({ model, operation, args, query }) => {
-      const attrs: Attributes = { 'db.system.name': DB_SYSTEM, 'db.operation.name': operation };
+      const attrs: Attributes = {
+        'db.system.name': DB_SYSTEM_POSTGRESQL,
+        'db.operation.name': operation,
+      };
       if (model !== undefined) {
         attrs['db.collection.name'] = model;
       }
@@ -114,122 +103,13 @@ export function instrumentPrisma<TClient extends ExtendableClient>(
     }) as TClient;
   }
 
-  const pool = options.pool;
-  if (pool) {
-    const poolAttrs: Attributes = {
-      'db.client.connection.pool.name': options.poolName ?? 'default',
-    };
-
-    const count = meter.createObservableUpDownCounter('db.client.connection.count', {
-      description: 'Connections in the pool by state',
-      unit: '{connection}',
+  if (options.pool) {
+    const instrumented = instrumentPgPool({
+      pool: options.pool,
+      ...(options.poolName === undefined ? {} : { poolName: options.poolName }),
+      ...(options.meterProvider === undefined ? {} : { meterProvider: options.meterProvider }),
     });
-    const max = meter.createObservableUpDownCounter('db.client.connection.max', {
-      description: 'Maximum number of connections the pool may open',
-      unit: '{connection}',
-    });
-    const pending = meter.createObservableUpDownCounter('db.client.connection.pending_requests', {
-      description: 'Requests waiting for a connection',
-      unit: '{request}',
-    });
-    const observe = (result: {
-      observe(instrument: unknown, value: number, attrs?: Attributes): void;
-    }): void => {
-      result.observe(count, pool.idleCount, { ...poolAttrs, 'db.client.connection.state': 'idle' });
-      result.observe(count, pool.totalCount - pool.idleCount, {
-        ...poolAttrs,
-        'db.client.connection.state': 'used',
-      });
-      result.observe(max, pool.options.max, poolAttrs);
-      result.observe(pending, pool.waitingCount, poolAttrs);
-    };
-    meter.addBatchObservableCallback(observe, [count, max, pending]);
-    disposers.push(() => {
-      meter.removeBatchObservableCallback(observe, [count, max, pending]);
-    });
-
-    const waitTime = meter.createHistogram('db.client.connection.wait_time', {
-      description: 'Time spent waiting to acquire a connection from the pool',
-      unit: 's',
-    });
-    const useTime = meter.createHistogram('db.client.connection.use_time', {
-      description: 'Time a connection was checked out of the pool',
-      unit: 's',
-    });
-    const timeouts = meter.createCounter('db.client.connection.timeouts', {
-      description: 'Connection acquisitions that timed out',
-      unit: '{timeout}',
-    });
-    const poolErrors = meter.createCounter('idempotix.db.pool.errors', {
-      description: 'Errors emitted by idle connections in the pool',
-      unit: '{error}',
-    });
-
-    // `pg` has no "waiting" event, so acquisition latency and timeouts can only
-    // be observed around `connect()` — the one entry point `pool.query()` uses too.
-    // Captured unbound on purpose: it is restored onto the same pool by dispose().
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const originalConnect = pool.connect;
-    type ConnectCallback = (err: Error | undefined, ...rest: unknown[]) => void;
-    // `pg.Pool.connect` has a promise form and a callback form; keep both.
-    const connectPromise = originalConnect as unknown as (this: pg.Pool) => Promise<pg.PoolClient>;
-    const connectCallback = originalConnect as unknown as (
-      this: pg.Pool,
-      callback: ConnectCallback,
-    ) => void;
-    const wrappedConnect = function (this: pg.Pool, callback?: ConnectCallback): unknown {
-      const start = process.hrtime.bigint();
-      const finish = (err: unknown): void => {
-        waitTime.record(secondsSince(start), poolAttrs);
-        if (err instanceof Error && /timeout/i.test(err.message)) {
-          timeouts.add(1, poolAttrs);
-        }
-      };
-      if (callback) {
-        connectCallback.call(this, (err, ...rest) => {
-          finish(err);
-          callback(err, ...rest);
-        });
-        return undefined;
-      }
-      return connectPromise.call(this).then(
-        (c) => {
-          finish(undefined);
-          return c;
-        },
-        (err: unknown) => {
-          finish(err);
-          throw err;
-        },
-      );
-    };
-    pool.connect = wrappedConnect as pg.Pool['connect'];
-    disposers.push(() => {
-      pool.connect = originalConnect;
-    });
-
-    const checkedOut = new WeakMap<object, bigint>();
-    const onAcquire = (client: pg.PoolClient): void => {
-      checkedOut.set(client, process.hrtime.bigint());
-    };
-    const onRelease = (_err: Error | undefined, client: pg.PoolClient): void => {
-      const start = checkedOut.get(client);
-      if (start !== undefined) {
-        checkedOut.delete(client);
-        useTime.record(secondsSince(start), poolAttrs);
-      }
-    };
-    const onError = (err: Error): void => {
-      poolErrors.add(1, { ...poolAttrs, 'error.type': errorType(err) });
-    };
-    pool.on('acquire', onAcquire);
-    pool.on('release', onRelease);
-    pool.on('error', onError);
-    disposers.push(() => {
-      pool.off('acquire', onAcquire);
-      pool.off('release', onRelease);
-      pool.off('error', onError);
-    });
+    disposers.push(instrumented.dispose);
   }
 
   return {

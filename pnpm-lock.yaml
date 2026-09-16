@@ -254,11 +254,30 @@ importers:
         specifier: ^7.2.2
         version: 7.2.2
 
+  packages/idempotix-pg:
+    dependencies:
+      '@sabeesoft/idempotix-core':
+        specifier: workspace:*
+        version: link:../idempotix-core
+    devDependencies:
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+
   packages/idempotix-prisma:
     dependencies:
       '@sabeesoft/idempotix-core':
         specifier: workspace:*
         version: link:../idempotix-core
+      '@sabeesoft/idempotix-pg':
+        specifier: workspace:*
+        version: link:../idempotix-pg
     devDependencies:
       '@nestjs-cls/transactional':
         specifier: ^3.3.0
@@ -335,8 +354,66 @@ importers:
       '@sabeesoft/idempotix-core':
         specifier: workspace:*
         version: link:../idempotix-core
+      '@sabeesoft/idempotix-pg':
+        specifier: workspace:*
+        version: link:../idempotix-pg
+    devDependencies:
+      '@nestjs-cls/transactional':
+        specifier: ^3.3.0
+        version: 3.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs-cls/transactional-adapter-typeorm':
+        specifier: ^1.4.0
+        version: 1.4.0(@nestjs-cls/transactional@3.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(typeorm@1.1.1(mysql2@3.15.3)(pg@8.23.0))
+      '@nestjs/common':
+        specifier: ^12.0.3
+        version: 12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^12.0.3
+        version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-express':
+        specifier: ^12.0.3
+        version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)
+      '@nestjs/testing':
+        specifier: ^12.0.3
+        version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(@nestjs/platform-express@12.0.3)
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
+      '@opentelemetry/sdk-metrics':
+        specifier: ^2.11.0
+        version: 2.11.0(@opentelemetry/api@1.9.1)
+      '@sabeesoft/idempotix-nestjs':
+        specifier: workspace:*
+        version: link:../idempotix-nestjs
+      '@sabeesoft/idempotix-testing':
+        specifier: workspace:*
+        version: link:../idempotix-testing
+      '@testcontainers/postgresql':
+        specifier: ^12.1.0
+        version: 12.1.0
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      '@types/supertest':
+        specifier: ^7.2.1
+        version: 7.2.1
+      nestjs-cls:
+        specifier: ^6.3.0
+        version: 6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      supertest:
+        specifier: ^7.2.2
+        version: 7.2.2
       typeorm:
-        specifier: ^1.0.0
+        specifier: ^1.1.1
         version: 1.1.1(mysql2@3.15.3)(pg@8.23.0)
 
 packages:
@@ -749,6 +826,14 @@ packages:
       '@prisma/client': '> 4 < 8'
       nestjs-cls: ^6.3.0
       prisma: '> 4 < 8'
+
+  '@nestjs-cls/transactional-adapter-typeorm@1.4.0':
+    resolution: {integrity: sha512-6uTBl+2tl7dqGZZwFbpl2SfPNlS2BQWYs0tXT/myOlXDV9tViqEOQFLjp0Az8DnL4KkryegoISRA5Qp+bd/4VQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@nestjs-cls/transactional': ^3.3.0
+      nestjs-cls: ^6.3.0
+      typeorm: ^0.3.2 || ^1.0.0
 
   '@nestjs-cls/transactional@3.3.0':
     resolution: {integrity: sha512-vCmi43XeeX7xB0mMMXk6ctcUDJJ/fMiMEGuDXHKzfjW22TBLh+tB6J7qnRm07Y+ovIijkUsKN7T2muk4F2TSJQ==}
@@ -3916,6 +4001,12 @@ snapshots:
       '@prisma/client': 7.10.0(prisma@7.10.0(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3))(typescript@6.0.3)
       nestjs-cls: 6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       prisma: 7.10.0(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
+
+  '@nestjs-cls/transactional-adapter-typeorm@1.4.0(@nestjs-cls/transactional@3.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(typeorm@1.1.1(mysql2@3.15.3)(pg@8.23.0))':
+    dependencies:
+      '@nestjs-cls/transactional': 3.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      nestjs-cls: 6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      typeorm: 1.1.1(mysql2@3.15.3)(pg@8.23.0)
 
   '@nestjs-cls/transactional@3.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(nestjs-cls@6.3.0(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.0.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:

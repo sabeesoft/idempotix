@@ -17,6 +17,7 @@ idempotix makes NestJS endpoints (and later message consumers) idempotent by joi
 | [`@sabeesoft/idempotix-prisma`](packages/idempotix-prisma)   | _unpublished_ | Prisma store adapter + instrumentation                                       |
 | [`@sabeesoft/idempotix-typeorm`](packages/idempotix-typeorm) | _unpublished_ | TypeORM store adapter + instrumentation                                      |
 | [`@sabeesoft/idempotix-testing`](packages/idempotix-testing) | _unpublished_ | Shared adapter contract test suite                                           |
+| [`@sabeesoft/idempotix-pg`](packages/idempotix-pg)           | _unpublished_ | Shared PostgreSQL SQL + pg pool instrumentation used by the adapters         |
 
 ## Installation
 

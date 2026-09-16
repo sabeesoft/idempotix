@@ -79,7 +79,8 @@ The key is scoped by tenant (see `tenant` below) and the route template (`POST /
 | `onMissingKey`     | `'generate'`        | `'generate'` runs the request with a fresh random key (no protection against a retry — reported as the `key_generated` metric outcome); `'reject'` answers `400` |
 | `tenant`           | none                | `(request) => string \| null`; isolates keys per client/tenant                                                                                                   |
 | `runInTransaction` | pass-through        | see above                                                                                                                                                        |
-| `metrics`, `clock` | no-op, system clock | see `@sabeesoft/idempotix-core`                                                                                                                                  |
+| `metrics`          | `'otel'`            | `'otel'`, `'noop'`, or a custom `IdempotencyMetrics` — see Metrics below                                                                                         |
+| `clock`            | system clock        | see `@sabeesoft/idempotix-core`                                                                                                                                  |
 
 Options are validated at startup; a bad value throws `IdempotixConfigurationError` naming the option.
 
