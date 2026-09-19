@@ -142,7 +142,11 @@ describe.skipIf(!runtimeAvailable)('instrumentPrisma (Postgres via Testcontainer
     const tiny = new pg.Pool({
       connectionString: container.getConnectionUri(),
       max: 1,
-      connectionTimeoutMillis: 50,
+      // Generous on purpose: the budget must comfortably cover establishing the
+      // first connection (a cold CI runner needs far more than a few
+      // milliseconds), while the second acquisition can only ever time out,
+      // because the pool holds one connection and the test is holding it.
+      connectionTimeoutMillis: 2_000,
     });
     const instrumented = instrumentPrisma({
       pool: tiny,
