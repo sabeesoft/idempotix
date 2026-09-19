@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "Shared adapter contract test suite for idempotix store implementations.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/sabeesoft/idempotix/tree/main/packages/idempotix-testing#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sabeesoft/idempotix.git",
+    "directory": "packages/idempotix-testing"
+  },
+  "bugs": {
+    "url": "https://github.com/sabeesoft/idempotix/issues"
+  },
+  "author": "sabeesoft",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -36,6 +46,6 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@sabeesoft/idempotix-core": "workspace:*"
+    "@sabeesoft/idempotix-core": "workspace:^"
   }
 }

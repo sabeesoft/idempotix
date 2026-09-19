@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "Shared PostgreSQL support for idempotix adapters: the idempotency SQL, row mapping and pg pool instrumentation.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/sabeesoft/idempotix/tree/main/packages/idempotix-pg#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sabeesoft/idempotix.git",
+    "directory": "packages/idempotix-pg"
+  },
+  "bugs": {
+    "url": "https://github.com/sabeesoft/idempotix/issues"
+  },
+  "author": "sabeesoft",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -36,7 +46,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@sabeesoft/idempotix-core": "workspace:*"
+    "@sabeesoft/idempotix-core": "workspace:^"
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.9.0",

@@ -72,7 +72,9 @@ Conventions: a transaction timeout is not a third outcome — it shows as `idemp
 5. `@sabeesoft/idempotix-nestjs`: module, decorator, interceptor, explicit helper, e2e tests. **(done)**
 6. Metrics: idempotency metrics, then Prisma pool/query/transaction instrumentation. **(done)**
 7. `@sabeesoft/idempotix-typeorm` adapter + instrumentation, passing the same suites. **(done)**
-8. Documentation, examples app, first release. **(docs + `examples/nestjs-prisma` done — this repo's current state; the first release is a separate, explicitly approved step: changesets, versions, npm token, dry run first)**
+8. Documentation, examples app, first release. **(docs + `examples/nestjs-prisma` done; release prepared — this repo's current state)**
+
+Release state: six changesets for `0.1.0` are committed but **not consumed** — `changeset version` must not be run locally, because that is what keeps the "Version Packages" PR as the publish gate (`changesets/action` publishes on a push to `main` with no pending changesets). Waiting on the GitHub repo, an npm Automation token as the `NPM_TOKEN` secret, and "Allow GitHub Actions to create and approve pull requests" in the repo settings.
 
 Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), transactional outbox, key propagation to downstream services via `nestjs-cls` + HTTP client interceptor, further adapters (Kysely, Drizzle, MikroORM).
 

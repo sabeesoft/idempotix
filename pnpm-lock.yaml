@@ -281,7 +281,7 @@ importers:
   packages/idempotix-nestjs:
     dependencies:
       '@sabeesoft/idempotix-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-core
     devDependencies:
       '@nestjs/common':
@@ -318,7 +318,7 @@ importers:
   packages/idempotix-pg:
     dependencies:
       '@sabeesoft/idempotix-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-core
     devDependencies:
       '@opentelemetry/api':
@@ -334,10 +334,10 @@ importers:
   packages/idempotix-prisma:
     dependencies:
       '@sabeesoft/idempotix-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-core
       '@sabeesoft/idempotix-pg':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-pg
     devDependencies:
       '@nestjs-cls/transactional':
@@ -407,16 +407,16 @@ importers:
   packages/idempotix-testing:
     dependencies:
       '@sabeesoft/idempotix-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-core
 
   packages/idempotix-typeorm:
     dependencies:
       '@sabeesoft/idempotix-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-core
       '@sabeesoft/idempotix-pg':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../idempotix-pg
     devDependencies:
       '@nestjs-cls/transactional':

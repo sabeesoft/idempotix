@@ -49,5 +49,13 @@
     "*.{ts,js,mjs,cjs,json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "homepage": "https://github.com/sabeesoft/idempotix#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sabeesoft/idempotix.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sabeesoft/idempotix/issues"
   }
 }

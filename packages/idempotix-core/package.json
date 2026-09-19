@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "Framework- and ORM-agnostic idempotency core: state machine, fingerprinting, ports, and an in-memory reference store.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/sabeesoft/idempotix/tree/main/packages/idempotix-core#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sabeesoft/idempotix.git",
+    "directory": "packages/idempotix-core"
+  },
+  "bugs": {
+    "url": "https://github.com/sabeesoft/idempotix/issues"
+  },
+  "author": "sabeesoft",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",

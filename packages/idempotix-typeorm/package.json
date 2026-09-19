@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "TypeORM (PostgreSQL) store adapter and query/pool instrumentation for idempotix.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/sabeesoft/idempotix/tree/main/packages/idempotix-typeorm#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sabeesoft/idempotix.git",
+    "directory": "packages/idempotix-typeorm"
+  },
+  "bugs": {
+    "url": "https://github.com/sabeesoft/idempotix/issues"
+  },
+  "author": "sabeesoft",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -37,8 +47,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@sabeesoft/idempotix-core": "workspace:*",
-    "@sabeesoft/idempotix-pg": "workspace:*"
+    "@sabeesoft/idempotix-core": "workspace:^",
+    "@sabeesoft/idempotix-pg": "workspace:^"
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.9.0",

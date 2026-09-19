@@ -23,10 +23,12 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm + Node
-        uses: pnpm/setup@v1
+        uses: pnpm/setup@v2
         with:
           runtime: node@24
           cache: true
+          # The explicit --frozen-lockfile step below is the install.
+          install: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
