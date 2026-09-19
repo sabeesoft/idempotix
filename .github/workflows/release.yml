@@ -36,6 +36,18 @@ jobs:
       - name: Build
         run: pnpm turbo run build
 
+      # pnpm deliberately stopped expanding ${NPM_TOKEN} in the project-level
+      # .npmrc (>= 11.5.3, so a checked-out repo cannot exfiltrate env secrets).
+      # The token therefore has to be written to the trusted user-level config,
+      # and `whoami` fails the job loudly if it is missing or invalid — rather
+      # than letting the registry answer an unauthenticated publish with a 404.
+      - name: Authenticate with the npm registry
+        run: |
+          pnpm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
+          pnpm whoami
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Create release PR or publish
         uses: changesets/action@v2
         with:
@@ -43,5 +55,3 @@ jobs:
           publish-script: pnpm run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

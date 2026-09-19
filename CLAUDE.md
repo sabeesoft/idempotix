@@ -95,6 +95,7 @@ Deferred to later releases: inbox pattern for message consumers (SQS/Kafka), tra
 - Every user-facing change needs a changeset (`pnpm changeset`).
 - Packages publish to public npm under the `@sabeesoft` scope (`publishConfig.access: public`). The project's own `.npmrc` explicitly pins `@sabeesoft:registry` to `https://registry.npmjs.org/` — do not remove this. Some development machines for this account have a global `~/.npmrc` that maps the `@sabeesoft` scope to GitHub Packages instead (used by other, unrelated projects); without this project-level override, `pnpm publish` here would silently target the wrong registry.
 - Release automation (GitHub Actions + `changesets/action`) opens a "Version Packages" PR and publishes on merge to `main`. No automatic publish happens outside that flow.
+- **Never put `_authToken=${NPM_TOKEN}` in the project `.npmrc`.** Since pnpm 11.5.3 environment variables are deliberately _not_ expanded in the project-level `.npmrc` for credential values (`_authToken`, `_auth`, `_password`, …), because that file is checked out with the repository — npm still expands it, pnpm resolves it to nothing. The publish then goes out unauthenticated and the registry answers **`404 Not Found`, not `401`**, which reads like a missing package. CI therefore writes the token to the user-level config (`pnpm config set //registry.npmjs.org/:_authToken`) and runs `pnpm whoami` right after, so a bad or missing token fails the step with a clear message instead of surfacing as a 404 at publish time.
 
 ## Running DB-backed tests locally
 
