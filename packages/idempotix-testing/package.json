@@ -1,6 +1,6 @@
 {
   "name": "@sabeesoft/idempotix-testing",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared adapter contract test suite for idempotix store implementations.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/sabeesoft/idempotix/tree/main/packages/idempotix-testing#readme",

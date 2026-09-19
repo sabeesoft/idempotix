@@ -1,6 +1,6 @@
 {
   "name": "@sabeesoft/idempotix-pg",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared PostgreSQL support for idempotix adapters: the idempotency SQL, row mapping and pg pool instrumentation.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/sabeesoft/idempotix/tree/main/packages/idempotix-pg#readme",
